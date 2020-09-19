@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <style>
+
+      @font-face {
+        font-family: 'Helvetica';
+      }
+
+      body {
+        width: 80vw;
+        height: 120vh;
+        margin: auto;
+        font-family: 'Helvetica';
+        color: #48EB97;
+      }
+
+      #circular-logo{
+        font-size: 3em;
+        padding-top: 1rem;
+      }
+
+      #message-body{
+        font-size: 1.5rem;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="circular-logo">
+      CIRCULAR
+    </div>
+    <br/>
+    <br/>
+    <div id="message-body">
+      Our moderators have approved your event! Use <%= link_to "this link", "http://localhost:3001/events/#{@id}" %> to view your event, and <%= link_to "this link", "http://localhost:3001/events/#{@id}?edit_token=" + @edit_token %> to make any changes. Note that, depending on the changes you make, your event may be subject to review again. You can respond to this e-mail with any questions.
+    </div>
+  </body>
+</html>
