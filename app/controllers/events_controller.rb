@@ -1,6 +1,6 @@
 class EventsController < ApplicationController
   def index
-    events = Event.approved.first(20)
+    events = Event.find_with_params(params)
     #first we organize the events by date, creating a hash that puts the events with a certain date under that date's key
     date_hash = events.inject({}) do |hash, event|
       date = event.date.strftime("%A, %b %d, %Y")

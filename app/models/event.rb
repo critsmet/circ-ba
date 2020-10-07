@@ -13,18 +13,18 @@ class Event < ApplicationRecord
 
   geocoded_by :address
 
-  before_create :fix_known_address_errors
   before_create :generate_edit_token
+  before_create :geocode, if: ->(obj){ obj.address.present? and obj.address_changed? }
 
   after_create :send_event_received_email
   #but not if the creator hasn't been approved yet
 
-  after_save :geocode, if: ->(obj){ obj.address.present? and obj.saved_change_to_address? }
   after_save :send_event_reviewed_email, if: ->(obj){ obj.approved != nil and obj.saved_change_to_approved? }
 
   default_scope { order(date: :asc)}
   scope :by_date, lambda {|date| where("date >= ? AND date <= ?", date, date.end_of_day)}
-  scope :from_today_on, -> { where("date >= ?", Date.today) }
+  scope :from_day_on, lambda { |date| where("date >= ?", date)}
+  scope :online, ->{where("online = true")}
   scope :approved, -> {where("approved = true")}
   scope :unapproved, -> {where("approved = false")}
   scope :need_review, -> {where("need_review = true")}
@@ -80,8 +80,28 @@ class Event < ApplicationRecord
     EntityMailer.with(email: entity.email, confirmation_token: entity.confirmation_token).email_confirmation.deliver_now
   end
 
-  def fix_known_address_errors
-    self.address = self.address.gsub('CMX', 'Ciudad de México')
+  def self.find_with_params(params)
+    if params[:location]
+      if params[:location] == "online"
+        events = Event.approved.online
+      else
+        events = Event.approved.near(params[:location])
+      end
+      if params[:date]
+        events = events.from_day_on(Date.parse(params[:date].gsub(" ", "-")))
+      end
+      if params[:category]
+        category = Category.find_by(id: params[:category])
+        events = events.select{|event| event.categories.include?(category)}
+      end
+      if params[:tag]
+        tag = Tag.find_by(id: params[:category])
+        events = events.select{|event| event.tags.include?(tag)}
+      end
+    else
+      events = Event.approved.from_day_on(Date.today).first(20)
+    end
+    events
   end
 
 
