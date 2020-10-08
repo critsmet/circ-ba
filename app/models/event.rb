@@ -87,21 +87,23 @@ class Event < ApplicationRecord
       else
         events = Event.approved.near(params[:location])
       end
-      if params[:date]
-        events = events.from_day_on(Date.parse(params[:date].gsub(" ", "-")))
-      end
-      if params[:category]
-        category = Category.find_by(id: params[:category])
+    else
+      events = Event.approved.from_day_on(Date.today)
+    end
+    if params[:date]
+      events = events.from_day_on(Date.parse(params[:date].gsub(" ", "-")))
+    end
+    if params[:category]
+      if params[:category] != "all"
+        category = Category.find_by(name: params[:category].downcase)
         events = events.select{|event| event.categories.include?(category)}
       end
-      if params[:tag]
-        tag = Tag.find_by(id: params[:category])
-        events = events.select{|event| event.tags.include?(tag)}
-      end
-    else
-      events = Event.approved.from_day_on(Date.today).first(20)
     end
-    events
+    if params[:tag]
+      tag = Tag.find_by(id: params[:category])
+      events = events.select{|event| event.tags.include?(tag)}
+    end
+    events.first(20)
   end
 
 
